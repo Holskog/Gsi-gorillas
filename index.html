@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GSI Gorillas Trening</title>
+  <title>Beat the Box – oppmøte, én runde av gangen</title>
   <style>
     :root{--bg:#0b1016;--card:#121924;--muted:#94a3b8;--text:#e5e7eb}
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,Inter,Arial,sans-serif;background:#0b1016;color:#e5e7eb}
+    body{margin:0;font-family:system-ui,Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
     header{padding:20px 16px;border-bottom:1px solid #18202b}
     h1{margin:0;font-size:clamp(22px,4vw,28px)}
     .wrap{max-width:1100px;margin:0 auto;padding:16px}
@@ -32,48 +32,12 @@
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px 10px;border-bottom:1px solid #1f2a33;text-align:left}
     th{position:sticky;top:0;background:#0f172a}
-    /* --- Padelbane-stil per kamp --- */
-    .court{
-      margin:10px 12px;
-      display:grid;
-      grid-template-columns:1fr 6px 1fr;
-      gap:0;
-      border-radius:14px;
-      overflow:hidden;
-      background:
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0/25% 100%,
-        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0/100% 25%,
-        radial-gradient(ellipse at center, rgba(37,99,235,0.12), rgba(0,0,0,0) 60%);
-      border:1px solid #203050;
-    }
-    .court .side{
-      padding:14px 12px 18px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:8px;
-      min-height:96px;
-      position:relative;
-      align-items:center;
-      text-align:center;
-      background:linear-gradient(180deg, rgba(21,32,52,.35), rgba(10,15,25,.2));
-    }
-    .court .net{ background:#e5e7eb; filter:opacity(.85);}
-    .court .playerTag{
-      padding:6px 10px;
-      border-radius:10px;
-      background:#0b1220;
-      border:1px solid #223046;
-      box-shadow:0 2px 8px rgba(0,0,0,.25);
-      font-size:14px;
-      white-space:nowrap;
-      text-align:center;
-    }
   </style>
 </head>
 <body>
   <header class="wrap">
-    <h1>GSI Gorillas Trening</h1>
+    <h1>Beat the Box – oppmøte & kamper</h1>
+    <p class="small">Legg til spillere → huk av oppmøte → lag én runde → registrér resultat → neste runde. Poeng 25/5/−15 (start 1500). Lagring i nettleser.</p>
     <p id="topCount" class="small"></p>
   </header>
 
@@ -89,9 +53,8 @@
         <div class="row" style="margin:8px 0 6px">
           <button id="checkAll" class="ghost" type="button">Marker alle</button>
           <button id="uncheckAll" class="ghost" type="button">Fjern alle</button>
-          <button id="exportJson" class="ghost" type="button">Eksporter JSON</button>
-          <button id="importJsonBtn" class="ghost" type="button">Importer JSON</button>
-          <input id="importJsonFile" type="file" accept="application/json" style="display:none" />
+          <button id="invertCheck" class="ghost" type="button">Inverter</button>
+          <button id="seedDemo" class="ghost" type="button">Legg inn 8 demo</button>
         </div>
         <div id="roster" class="list" aria-live="polite"></div>
         <p id="msg" class="small" aria-live="polite"></p>
@@ -110,9 +73,9 @@
             <label for="courts">Antall baner (valgfritt)</label>
             <input id="courts" type="number" min="1" placeholder="Auto" />
           </div>
-          <div class="row" style="max-width:520px">
-            <button id="nextBtn" class="primary" type="button">Neste runde</button>
-            <button id="cancelRound" class="ghost" type="button" title="Avbryt pågående runde uten poengendring">Avbryt runde</button>
+          <div class="row" style="max-width:420px">
+            <button id="generateFirst" class="primary" type="button">Start – lag 1. runde</button>
+            <button id="nextRound" class="ghost" type="button" disabled>Neste runde</button>
           </div>
         </div>
         <div id="schedule"></div>
@@ -133,13 +96,12 @@
 
 <script>
 /* ====== Konfig & helpers ====== */
-const STORAGE_KEY='gsi_gorillas_stable_json_io_v1';
+const STORAGE_KEY='btb_padel_semester_onefile_v2';
 const $=(s,el=document)=>el.querySelector(s);
 const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
 let store={players:[],config:{courts:0}};
 const SCORING={win:25,draw:5,loss:-15};
-let recorded=new Map(), currentRound=0, currentCourts=0, started=false;
-let restingByRound={};
+let recorded=new Map(), currentRound=0, currentCourts=0;
 
 const uid=()=>Math.random().toString(36).slice(2,9);
 const save=()=>{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); updateTop(); };
@@ -147,13 +109,13 @@ const load=()=>{ try{ const raw=localStorage.getItem(STORAGE_KEY);
   if(raw){ const o=JSON.parse(raw)||{}; store.players=Array.isArray(o.players)?o.players:[]; store.config=o.config||{courts:0}; }
 }catch{} updateTop(); };
 const updateTop=()=>{ const c=$('#topCount'); if(c) c.textContent=`Spillere totalt: ${store.players.length}`; };
-const toast=(t,k='ok')=>{ const el=$('#msg'); if(!el) return; el.textContent=t; el.className=`small ${k}`; setTimeout(()=>{el.textContent='';},2000); };
+const toast=(t,k='ok')=>{ const el=$('#msg'); if(!el) return; el.textContent=t; el.className=`small ${k}`; setTimeout(()=>{el.textContent='';},2500); };
 
 /* ====== Roster ====== */
 function addPlayer(name, pts=1500){
   name=(name||'').trim(); if(!name){ toast('Skriv navn','err'); return; }
   if(store.players.some(p=>p.name.toLowerCase()===name.toLowerCase())){ toast('Navnet finnes allerede','warn'); return; }
-  store.players.push({id:uid(),name:name,pts:Number(pts)||1500,games:0,w:0,d:0,l:0,rest:0,present:true});
+  store.players.push({id:uid(),name,pts:Number(pts)||1500,games:0,w:0,d:0,l:0,rest:0,present:true});
   save(); renderRoster(); renderTable(); toast(`${name} lagt til.`,'ok');
 }
 function setPresent(id,flag){ const p=store.players.find(x=>x.id===id); if(p){ p.present=flag; save(); renderTable(); } }
@@ -163,39 +125,18 @@ function editPlayer(id){
   const v=prompt('Rediger poeng',p.pts); if(v!==null && v!==''){ const num=Number(v); if(!Number.isNaN(num)) p.pts=num; }
   save(); renderRoster(); renderTable();
 }
-function editPoints(id){
-  const p=store.players.find(x=>x.id===id); if(!p) return;
-  const current = String(p.pts);
-  const v = prompt('Ny poengsum, eller +25/-15 for justering', current);
-  if(v===null) return;
-  const s = String(v).trim();
-  if(!s) return;
-  if(/^[-+]\d+$/.test(s)){
-    p.pts += parseInt(s,10);
-  } else {
-    const num = Number(s);
-    if(!Number.isFinite(num)){ toast('Ugyldig tall','err'); return; }
-    p.pts = num;
-  }
-  save(); renderRoster(); renderTable();
-}
 function removePlayer(id){ if(!confirm('Fjerne spiller?')) return;
   store.players=store.players.filter(p=>p.id!==id); save(); renderRoster(); renderTable();
 }
 function renderRoster(){
   const root=$('#roster'); root.innerHTML='';
   if(!store.players.length){ root.innerHTML='<p class="small">Ingen spillere. Legg til ovenfor.</p>'; return; }
-  // Alfabetisk i øverste lista
-  const rows=[...store.players].sort((a,b)=> a.name.localeCompare(b.name));
+  const rows=[...store.players].sort((a,b)=> b.pts-a.pts || a.name.localeCompare(b.name));
   rows.forEach(p=>{
     const div=document.createElement('div'); div.className='player';
     div.innerHTML=`<input type="checkbox" class="present" data-id="${p.id}" ${p.present?'checked':''}/>
-      <div>
-        <div style="font-weight:600">${p.name}</div>
-        <div class="small pts" data-pts="${p.id}" title="Klikk for å redigere poeng">${p.pts} poeng ✎</div>
-      </div>
+      <div><div style="font-weight:600">${p.name}</div><div class="small">${p.pts} poeng</div></div>
       <div class="row" style="gap:6px;justify-content:flex-end">
-        <button data-pts-btn="${p.id}" type="button" title="Endre poeng">Poeng</button>
         <button data-edit="${p.id}" type="button">Rediger</button>
         <button data-del="${p.id}" type="button">Fjern</button>
       </div>`;
@@ -204,112 +145,40 @@ function renderRoster(){
   $$('.present',root).forEach(cb=> cb.addEventListener('change',e=> setPresent(e.currentTarget.dataset.id,e.currentTarget.checked)));
   $$('[data-edit]',root).forEach(b=> b.addEventListener('click',()=>editPlayer(b.dataset.edit)));
   $$('[data-del]',root).forEach(b=> b.addEventListener('click',()=>removePlayer(b.dataset.del)));
-  $$('[data-pts]',root).forEach(el=> el.addEventListener('click',()=> editPoints(el.dataset.pts)));
-  $$('[data-pts-btn]',root).forEach(b=> b.addEventListener('click',()=> editPoints(b.dataset.ptsBtn)));
 }
 const markAll=f=>{ store.players.forEach(p=>p.present=f); save(); renderRoster(); };
-
-/* ====== JSON Export/Import ====== */
-function exportJSON(){
-  const payload = {
-    version: 1,
-    exported_at: new Date().toISOString(),
-    players: store.players,
-    config: store.config
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json;charset=utf-8;'});
-  const ts = new Date().toISOString().replace(/[:.]/g,'-');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `gsi-gorillas-data-${ts}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-function normalizePlayer(p){
-  return {
-    id: p.id || uid(),
-    name: String(p.name || '').trim() || 'Uten navn',
-    pts: Number.isFinite(+p.pts)? +p.pts : 1500,
-    games: Number.isFinite(+p.games)? +p.games : 0,
-    w: Number.isFinite(+p.w)? +p.w : 0,
-    d: Number.isFinite(+p.d)? +p.d : 0,
-    l: Number.isFinite(+p.l)? +p.l : 0,
-    rest: Number.isFinite(+p.rest)? +p.rest : 0,
-    present: !!p.present
-  };
-}
-function importJSONFile(file){
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const data = JSON.parse(reader.result);
-      const players = Array.isArray(data.players) ? data.players.map(normalizePlayer) : [];
-      const config = data.config && typeof data.config==='object' ? data.config : {courts:0};
-      if(players.length===0){ toast('JSON mangler spillere','err'); return; }
-      // Lag en sikkerhetskopi før vi erstatter
-      localStorage.setItem(STORAGE_KEY+'_backup', JSON.stringify(store));
-      // Nullstill pågående runde
-      recorded=new Map(); currentRound=0; started=false; restingByRound={};
-      $('#schedule').innerHTML=''; $('#meta').textContent='–'; $('#nextBtn').disabled=false;
-      // Erstatt data
-      store.players = players;
-      store.config = config;
-      save(); renderRoster(); renderTable();
-      toast('Data importert.','ok');
-    }catch(e){
-      console.error(e);
-      toast('Kunne ikke lese JSON','err');
-    }
-  };
-  reader.readAsText(file, 'utf-8');
-}
+const invertMarks=()=>{ store.players.forEach(p=>p.present=!p.present); save(); renderRoster(); };
 
 /* ====== Plan (én runde av gangen) ====== */
 const sortByPoints=a=>[...a].sort((x,y)=> y.pts-x.pts || x.name.localeCompare(y.name));
 const chunk=(a,n)=>{const o=[]; for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n)); return o};
-const pairingsSeeded=g=> [ [ [g[0], g[3]], [g[1], g[2]] ] ]; // fast: 1+4 vs 2+3
-
-// Rettferdig hvile -> så seed etter ferske poeng
-function selectRestingFirst(present, cap){
-  if(present.length <= cap) return { active: [...present], resting: [] };
-  const byNeed = [...present].sort((a,b)=> a.rest - b.rest || Math.random() - 0.5);
-  const toRest = present.length - cap;
-  const resting = byNeed.slice(0, toRest);
-  const active = present.filter(p => !resting.includes(p));
-  return { active, resting };
+const pairingsSeeded=g=>[ [[g[0],g[3]],[g[1],g[2]]], [[g[0],g[2]],[g[1],g[3]]], [[g[0],g[1]],[g[2],g[3]]] ];
+function selectActivePlayers(players,cap){
+  if(players.length<=cap) return {active:[...players],resting:[]};
+  const sorted=[...players].sort((a,b)=> a.rest-b.rest || Math.random()-0.5);
+  const toRest=players.length-cap; const resting=sorted.slice(0,toRest);
+  const active=players.filter(p=>!resting.includes(p)); return {active,resting};
+}
+function startPlan(){
+  const present=store.players.filter(p=>p.present); if(present.length<4){ toast('Minst 4 til stede.','err'); return; }
+  const cIn=parseInt($('#courts').value,10);
+  currentCourts=Number.isFinite(cIn)&&cIn>0?cIn:Math.max(1,Math.floor(present.length/4));
+  currentRound=0; recorded=new Map(); createRound();
 }
 function allResultsEntered(r){
   const ids=Array.from(recorded.keys()).filter(id=>id.startsWith(`r${r}`));
   return ids.length>0 && ids.every(id=>recorded.get(id)?.action);
 }
-function startPlan(){
-  const present=store.players.filter(p=>p.present); if(present.length<4){ toast('Minst 4 til stede.','err'); return; }
-  started=true; currentRound=0; recorded=new Map(); createRound();
-}
 function createRound(){
   $('#schedule').innerHTML=''; // bare aktiv runde
-  const present=store.players.filter(p=>p.present);
-  if(present.length<4){ toast('For få til stede.','err'); return; }
-
-  // Re-beregn baner hver runde: input -> ellers auto
-  const cIn = parseInt($('#courts').value,10);
-  const autoCourts = Math.max(1, Math.floor(present.length/4));
-  currentCourts = (Number.isFinite(cIn) && cIn>0) ? Math.min(cIn, autoCourts) : autoCourts;
-
   const cap=currentCourts*4;
+  const present=store.players.filter(p=>p.present); if(present.length<4){ toast('For få til stede.','err'); return; }
 
-  // 1) Hvile først (rettferdig), uavhengig av poeng
-  const {active, resting} = selectRestingFirst(present, cap);
-  restingByRound[currentRound] = resting.map(p=>p.id);
+  // VELG på nytt hver runde basert på OPPDATERTE poeng:
+  const {active,resting}=selectActivePlayers(sortByPoints(present),cap);
   resting.forEach(p=>p.rest+=1);
 
-  // 2) Sortér aktive etter ferske poeng
-  const seeded = sortByPoints(active);
-
-  // 3) Grupper 4 og seed 1+4 vs 2+3 (fast)
-  const groups=chunk(seeded,4).filter(g=>g.length===4);
-  if(!groups.length){ toast('Ikke nok spillere til en bane (trenger 4).','warn'); return; }
-
+  const groups=chunk(sortByPoints(active),4).filter(g=>g.length===4);
   const r=currentRound;
   const container=document.createElement('div'); container.className='matches'; container.id=`round-${r}`;
   const wrap=document.createElement('div'); wrap.className='card';
@@ -317,21 +186,11 @@ function createRound(){
   $('#schedule').appendChild(wrap); wrap.appendChild(container);
 
   groups.forEach((g,gi)=>{
-    const [t1,t2]=pairingsSeeded(g)[0];
+    const [t1,t2]=pairingsSeeded(g)[r%3]; // 1+4 vs 2+3, så rotasjon
     const id=`r${r}g${gi}`;
     const el=document.createElement('div'); el.className='match';
     el.innerHTML=`<header><div><strong>Bane ${gi+1}</strong></div><div class="small" id="status-${id}">Ingen resultat</div></header>
-      <div class="court">
-        <div class="side">
-          <div class="playerTag">`+t1.map(p=>p.name)[0]+`</div>
-          <div class="playerTag">`+t1.map(p=>p.name)[1]+`</div>
-        </div>
-        <div class="net" aria-hidden="true"></div>
-        <div class="side">
-          <div class="playerTag">`+t2.map(p=>p.name)[0]+`</div>
-          <div class="playerTag">`+t2.map(p=>p.name)[1]+`</div>
-        </div>
-      </div>
+      <div class="teams">${t1.map(p=>p.name).join(' + ')} <span class="small">vs</span> ${t2.map(p=>p.name).join(' + ')}</div>
       <div class="row" style="padding:8px;border-top:1px solid #1e293b">
         <button data-action="t1" data-id="${id}">Team 1 vant</button>
         <button data-action="draw" data-id="${id}">Uavgjort</button>
@@ -341,13 +200,12 @@ function createRound(){
     recorded.set(id,{t1:t1.map(x=>x.id),t2:t2.map(x=>x.id),action:null});
   });
 
-  $('#meta').textContent=`${present.length} tilstede • ${currentCourts} baner i bruk • Runde ${r+1}`;
-  // Lås "Neste runde" til alle resultater i runden er registrert
-  $('#nextBtn').disabled=true;
+  $('#meta').textContent=`${present.length} tilstede • ${currentCourts} baner • Runde ${r+1}`;
+  $('#nextRound').disabled=true;
   $$('#round-'+r+' [data-action]').forEach(btn=> btn.addEventListener('click', e=>{
     const {id,action}=e.currentTarget.dataset; applyResult(id,action);
   }));
-  save(); renderTable();
+  save(); renderTable(); // viser ferske tall i tabell
 }
 function nextRound(){
   if(!allResultsEntered(currentRound)){
@@ -375,36 +233,9 @@ function applyResult(id,action){
   scoreTeam(rec.t1,rec.t2,action);
   const b=document.getElementById(`status-${id}`); if(b) b.textContent= action==='t1'?'Team 1 vant': action==='t2'?'Team 2 vant':'Uavgjort';
   rec.action=action; save();
-  renderTable();
-  renderRoster();
-  if(allResultsEntered(currentRound)) $('#nextBtn').disabled=false;
-}
-function cancelRound(){
-  // Roll back any results in this round (remove assigned points)
-  const keys = Array.from(recorded.keys()).filter(id=>id.startsWith(`r${currentRound}`));
-  keys.forEach(id=>{
-    const rec = recorded.get(id);
-    if(rec && rec.action){ rollbackPrevious(id); } // undoes points & clears action
-    recorded.delete(id);
-  });
-  // Undo 'rest' increments for this round
-  const restIds = restingByRound[currentRound] || [];
-  restIds.forEach(id=>{
-    const p = store.players.find(x=>x.id===id);
-    if(p && p.rest>0) p.rest -= 1;
-  });
-  delete restingByRound[currentRound];
-  // Clear UI of current round
-  const sched = document.getElementById('schedule');
-  if(sched) sched.innerHTML='';
-  const meta = document.getElementById('meta');
-  if(meta) meta.textContent='–';
-  // Allow generating new round immediately
-  const nextBtn = document.getElementById('nextBtn');
-  if(nextBtn) nextBtn.disabled=false;
-  started=false; // slik at neste klikk lager en ny første runde
-  save(); renderRoster(); renderTable();
-  toast('Runde avbrutt. Lag en ny runde når du er klar.','warn');
+  renderTable();  // oppdatér tabell
+  renderRoster(); // oppdatér poeng under navn
+  if(allResultsEntered(currentRound)) $('#nextRound').disabled=false;
 }
 
 /* ====== Scoreboard ====== */
@@ -421,7 +252,7 @@ function exportCSV(){
   const header='Plass;Spiller;Poeng;Kamper;V;U;T;Hvile;Tilstede\n';
   const body=rows.map((r,i)=>`${i+1};${r.name};${r.pts};${r.games};${r.w};${r.d};${r.l};${r.rest};${r.present?1:0}`).join('\n');
   const blob=new Blob([header+body],{type:'text/csv;charset=utf-8;'}), url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='gsi-gorillas-scoreboard.csv'; a.click(); URL.revokeObjectURL(url);
+  const a=document.createElement('a'); a.href=url; a.download='beat-the-box-scoreboard.csv'; a.click(); URL.revokeObjectURL(url);
 }
 
 /* ====== Init – enkel og stabil ====== */
@@ -431,7 +262,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   const form  = document.getElementById('addForm');
   const input = document.getElementById('newName');
   const btn   = document.getElementById('addPlayer');
-  const nextBtn = document.getElementById('nextBtn');
 
   // ÉN sann flyt: alt går via submit
   form.addEventListener('submit', (e)=>{
@@ -446,23 +276,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   document.getElementById('checkAll').addEventListener('click', ()=> markAll(true));
   document.getElementById('uncheckAll').addEventListener('click', ()=> markAll(false));
-
-  // JSON IO
-  document.getElementById('exportJson').addEventListener('click', exportJSON);
-  const fileInput = document.getElementById('importJsonFile');
-  document.getElementById('importJsonBtn').addEventListener('click', ()=> fileInput.click());
-  fileInput.addEventListener('change', (e)=>{
-    if(e.target.files && e.target.files[0]) importJSONFile(e.target.files[0]);
-    e.target.value=''; // tillat re-import av samme fil
+  document.getElementById('invertCheck').addEventListener('click', invertMarks);
+  document.getElementById('seedDemo').addEventListener('click', ()=>{
+    ['Ola','Kari','Per','Anne','Mats','Ida','Siri','Jon'].forEach(n=>{
+      if(!store.players.some(p=>p.name===n))
+        store.players.push({id:uid(),name:n,pts:1500,games:0,w:0,d:0,l:0,rest:0,present:true});
+    });
+    save(); renderRoster(); renderTable();
   });
 
-  // Enkelt "Neste runde" - én knapp, to moduser
-  nextBtn.addEventListener('click', ()=>{
-    if(!started){ startPlan(); }
-    else { nextRound(); }
-  });
-  document.getElementById('cancelRound').addEventListener('click', cancelRound);
-
+  document.getElementById('generateFirst').addEventListener('click', startPlan);
+  document.getElementById('nextRound').addEventListener('click', nextRound);
   document.getElementById('exportCsv').addEventListener('click', exportCSV);
 });
 </script>
