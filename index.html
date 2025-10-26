@@ -11,9 +11,12 @@
     header{padding:20px 16px;border-bottom:1px solid #18202b}
     h1{margin:0;font-size:clamp(22px,4vw,28px)}
     .wrap{max-width:1500px;margin:0 auto;padding:16px}
-    .grid{display:grid;gap:12px}
-    @media(min-width:1000px){.grid{grid-template-columns:380px 1fr}.span-full{grid-column:1 / -1}}
-    .card{background:#121924;border:1px solid #1e293b;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    /* Pages */
+    .pages{display:block}
+    .page{display:none}
+    .page.active{display:block}
+    /* Cards + layout */
+    .card{background:#121924;border:1px solid #1e293b;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin-bottom:16px}
     .card .inner{padding:14px}
     label{display:block;font-size:12px;color:#94a3b8;margin:8px 0 6px}
     input,button{border-radius:10px;border:1px solid #253346;background:#0f172a;color:#e5e7eb;padding:10px 12px}
@@ -22,12 +25,15 @@
     .ghost{background:transparent;border:1px dashed #334155}
     .row{display:flex;gap:8px;align-items:center}
     .row>*{flex:1}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+    .toolbar .spacer{flex:1}
     .list{display:grid;gap:6px;max-height:420px;overflow:auto}
     .player{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #223046;border-radius:10px;background:#0d1524;position:relative}
     .small{font-size:12px;color:#94a3b8}
-    .matches{display:grid;gap:48px}
+    /* Matches grid */
+    .matches{display:grid;gap:56px;padding: 16px 28px 36px}
     @media(min-width:900px){.matches{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    .match{margin-bottom:4px;border:1px solid #233049;border-radius:12px;overflow:hidden;background:#0e1626}
+    .match{border:1px solid #233049;border-radius:12px;overflow:hidden;background:#0e1626;margin-bottom:10px}
     .match header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #1e293b}
     .teams{padding:10px 12px}
     table{width:100%;border-collapse:collapse}
@@ -37,11 +43,7 @@
     .court{
       margin:10px 12px;
       display:grid;
-      grid-template-columns:1fr 8px 1fr;
-      gap:0;
-      border-radius:14px;
-      overflow:hidden;
-      background:
+      grid-template-columns:1fr 8px 1fr; gap:0; border-radius:14px; overflow:hidden; margin:20px 24px; background:
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0/25% 100%,
         linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0/100% 25%,
         radial-gradient(ellipse at center, rgba(37,99,235,0.12), rgba(0,0,0,0) 60%);
@@ -81,78 +83,147 @@
     .menu button:hover{background:#132032}
     .menu hr{border:0;border-top:1px solid #223046;margin:6px 0}
     .pts-click{cursor:pointer}
+    /* Controls wrap for roster */
+    .controls{flex-wrap:wrap}
+    .controls #searchName{flex:1 0 100%}
+    .controls button{margin-top:6px}
+    /* Simple top nav (optional) */
+    nav.top{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    nav.top a{padding:8px 10px;border:1px solid #334155;border-radius:10px;text-decoration:none;color:var(--text);background:#0f172a}
+    nav.top a.active{background:#2563eb;border-color:#2563eb}
+    
+
+  
+    /* Overstyr bredde på 'Legg til spiller'-feltet */
+    #addForm > input#newName { flex: 1 1 auto; max-width: 100%; }
+    #addForm > button#addPlayer { flex: 0 0 auto !important; }
+
+  
+    
+      #addForm > input#newName { flex: 0 0 360px; max-width: 360px; }
+      #addForm > button#addPlayer { flex: 0 0 auto; }
+    }
+
+  
+    
+    #addForm > input#newName { flex: 0 0 360px !important; max-width: 360px !important; }
+    #addForm > button#addPlayer { flex: 0 0 auto !important; }
+    @media (max-width: 600px){
+      #addForm > input#newName { flex: 1 1 auto !important; max-width: 100% !important; }
+    }
+
+  
+    /* Bredde som før vi delte inn i sider */
+    #addForm { gap: 8px; }
+    #addForm > * { flex: 0 0 auto; }
+    #addForm > input#newName { flex: 0 0 380px; max-width: 380px; }
+    #addForm > button#addPlayer { flex: 0 0 auto; }
+    @media (max-width: 600px){
+      #addForm > * { flex: 1 1 auto; }
+      #addForm > input#newName { max-width: 100%; }
+      #addForm > button#addPlayer { flex: 0 0 auto; }
+    }
+
+  
+    /* Gjør spiller-vinduet smalere og sentrert */
+    #page-players .card { max-width: 820px; margin: 0 auto; }
+
+  
+  
+    /* Sentrer side-overskrift og toppnavigasjon */
+    header.wrap h1 { text-align: center; }
+    header.wrap #topCount { text-align: center; }
+    header.wrap nav.top { justify-content: center; }
+
   </style>
 </head>
 <body>
   <header class="wrap">
     <h1>GSI Gorillas Trening</h1>
     <p id="topCount" class="small"></p>
+    <nav class="top">
+      <a href="#spillere" id="nav-players">Spillere</a>
+      <a href="#kamper" id="nav-matches">Kampoppsett</a>
+      <a href="#score" id="nav-score">Scoreboard</a>
+    </nav>
   </header>
 
-  <main class="wrap grid">
-    <!-- Spillere & oppmøte -->
-    <section class="card">
-      <div class="inner">
-        <h2>Spillere & oppmøte</h2>
-        <form id="addForm" class="row">
-          <input id="newName" placeholder="Nytt navn" autocomplete="off" />
-          <button id="addPlayer" class="primary" type="submit" style="width:auto">Legg til (1500)</button>
-        </form>
-        <div class="row" style="margin:8px 0 6px">
-          <button id="checkAll" class="ghost" type="button">Marker alle</button>
-          <button id="uncheckAll" class="ghost" type="button">Fjern alle</button>
-          <button id="exportJson" class="ghost" type="button">Eksporter JSON</button>
-          <button id="importJsonBtn" class="ghost" type="button">Importer JSON</button>
-          <button id="resetRestAll" class="ghost" type="button" title="Sett hvile=0 for alle">Nullstill hvile</button>
-          <input id="importJsonFile" type="file" accept="application/json" style="display:none" />
+  <main class="wrap pages">
+    <!-- Spillere-siden -->
+    <section class="page" id="page-players">
+      <div class="card">
+        <div class="inner">
+          <h2 style="margin:0 0 8px">Spillere & oppmøte</h2>
+          <form id="addForm" class="row">
+            <input id="newName" placeholder="Nytt navn" autocomplete="off" />
+            <button id="addPlayer" class="primary" type="submit" style="width:auto">Legg til (1500)</button>
+          </form>
+          <div class="row controls" style="margin:8px 0 6px">
+            <input id="searchName" placeholder="Søk navn" autocomplete="off" style="flex:2" />
+            <button id="checkAll" class="ghost" type="button">Marker alle</button>
+            <button id="uncheckAll" class="ghost" type="button">Fjern alle</button>
+            <button id="exportJson" class="ghost" type="button">Eksporter JSON</button>
+            <button id="importJsonBtn" class="ghost" type="button">Importer JSON</button>
+            <button id="resetRestAll" class="ghost" type="button" title="Sett hvile=0 for alle">Nullstill hvile</button>
+            <input id="importJsonFile" type="file" accept="application/json" style="display:none" />
+          </div>
+          <div id="roster" class="list" aria-live="polite"></div>
+          <p id="msg" class="small" aria-live="polite"></p>
+          
         </div>
-        <div id="roster" class="list" aria-live="polite"></div>
-        <p id="msg" class="small" aria-live="polite"></p>
       </div>
     </section>
 
-    <!-- Plan -->
-    <section class="card">
-      <div class="inner">
-        <div class="row" style="justify-content:space-between">
-          <h2 style="margin:0">Kampoppsett</h2>
-          <span id="meta" class="small">–</span>
-        </div>
-        <div class="row" style="margin-bottom:8px">
-          <div>
-            <label for="courts">Antall baner (valgfritt)</label>
-            <input id="courts" type="number" min="1" placeholder="Auto" />
+    <!-- Kampoppsett-siden -->
+    <section class="page" id="page-matches">
+      <div class="card">
+        <div class="inner">
+          <div class="row" style="justify-content:space-between">
+            <h2 style="margin:0">Kampoppsett</h2>
+            <span id="meta" class="small">–</span>
           </div>
-          <div class="row" style="max-width:520px">
-            <button id="nextBtn" class="primary" type="button">Neste runde</button>
-            <button id="cancelRound" class="ghost" type="button" title="Avbryt pågående runde uten poengendring">Avbryt runde</button>
+          <div class="row" style="margin-bottom:8px">
+            <div>
+              <label for="courts">Antall baner (valgfritt)</label>
+              <input id="courts" type="number" min="1" placeholder="Auto" />
+            </div>
+            <div class="row" style="max-width:620px">
+              <button id="nextBtn" class="primary" type="button">Neste runde</button>
+              <button id="cancelRound" class="ghost" type="button" title="Avbryt pågående runde uten poengendring">Avbryt runde</button>
+              
+            </div>
           </div>
+          <div id="schedule"></div>
         </div>
-        <div id="schedule"></div>
       </div>
     </section>
 
-    <!-- Scoreboard -->
-    <section class="card span-full">
-      <div class="inner">
-        <div class="row" style="justify-content:space-between">
-          <h2 style="margin:0">Scoreboard</h2>
-          <button class="ghost" id="exportCsv" style="width:auto">Last ned CSV</button>
+    <!-- Scoreboard-siden -->
+    <section class="page" id="page-score">
+      <div class="card">
+        <div class="inner">
+          <div class="row" style="justify-content:space-between">
+            <h2 style="margin:0">Scoreboard</h2>
+            <div class="row" style="flex:0">
+              <button class="ghost" id="exportCsv" style="width:auto">Last ned CSV</button>
+            </div>
+          </div>
+          <div id="tableWrap"></div>
         </div>
-        <div id="tableWrap"><div><table></table></div></div>
       </div>
     </section>
   </main>
 
 <script>
 /* ====== Konfig & helpers ====== */
-const STORAGE_KEY='gsi_gorillas_two_col_matches_v1';
+const STORAGE_KEY='gsi_gorillas_routed_v1';
 const $=(s,el=document)=>el.querySelector(s);
 const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
 let store={players:[],config:{courts:0}};
 const SCORING={win:25,draw:5,loss:-15};
 let recorded=new Map(), currentRound=0, currentCourts=0, started=false;
 let restingByRound={};
+let searchQuery='';
 
 const uid=()=>Math.random().toString(36).slice(2,9);
 const save=()=>{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); updateTop(); };
@@ -161,6 +232,24 @@ const load=()=>{ try{ const raw=localStorage.getItem(STORAGE_KEY);
 }catch{} updateTop(); };
 const updateTop=()=>{ const c=$('#topCount'); if(c) c.textContent=`Spillere totalt: ${store.players.length}`; };
 const toast=(t,k='ok')=>{ const el=$('#msg'); if(!el) return; el.textContent=t; el.className=`small ${k}`; setTimeout(()=>{el.textContent='';},2000); };
+
+/* ====== Minirouter ====== */
+function goTo(page){
+  ['players','matches','score'].forEach(p=> $('#page-'+p).classList.remove('active'));
+  $('#page-'+page).classList.add('active');
+  // nav highlight
+  $('#nav-players').classList.toggle('active', page==='players');
+  $('#nav-matches').classList.toggle('active', page==='matches');
+  $('#nav-score').classList.toggle('active', page==='score');
+  if(page==='score') renderTable();
+  if(page==='players') renderRoster();
+}
+window.addEventListener('hashchange', ()=>{
+  const h=location.hash.replace('#','');
+  if(h==='kamper') goTo('matches');
+  else if(h==='score') goTo('score');
+  else goTo('players');
+});
 
 /* ====== Roster ====== */
 function addPlayer(name, pts=1500){
@@ -217,10 +306,11 @@ function removePlayer(id){ if(!confirm('Fjerne spiller?')) return;
 }
 
 function renderRoster(){
-  const root=$('#roster'); root.innerHTML='';
+  const root=$('#roster'); if(!root) return; root.innerHTML='';
   if(!store.players.length){ root.innerHTML='<p class="small">Ingen spillere. Legg til ovenfor.</p>'; return; }
-  // Alfabetisk i øverste lista
-  const rows=[...store.players].sort((a,b)=> a.name.localeCompare(b.name));
+  const rows=[...store.players]
+    .filter(p=> !searchQuery || p.name.toLowerCase().includes(searchQuery))
+    .sort((a,b)=> a.name.localeCompare(b.name));
   rows.forEach(p=>{
     const div=document.createElement('div'); div.className='player';
     div.innerHTML=`<input type="checkbox" class="present" data-id="${p.id}" ${p.present?'checked':''}/>
@@ -240,10 +330,8 @@ function renderRoster(){
       </div>`;
     root.appendChild(div);
   });
-  // Listeners
   $$('.present',root).forEach(cb=> cb.addEventListener('change',e=> setPresent(e.currentTarget.dataset.id,e.currentTarget.checked)));
   $$('[data-pts]',root).forEach(el=> el.addEventListener('click',()=> editPoints(el.dataset.pts)));
-  // Menu open/close
   $$('[data-menu-for]',root).forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       const id = e.currentTarget.dataset.menuFor;
@@ -253,7 +341,6 @@ function renderRoster(){
       e.stopPropagation();
     });
   });
-  // Menu actions
   $$('#roster .menu [data-act]',root).forEach(b=> b.addEventListener('click', (e)=>{
     const act=e.currentTarget.dataset.act, id=e.currentTarget.dataset.id;
     if(act==='name') editName(id);
@@ -305,12 +392,9 @@ function importJSONFile(file){
       const players = Array.isArray(data.players) ? data.players.map(normalizePlayer) : [];
       const config = data.config && typeof data.config==='object' ? data.config : {courts:0};
       if(players.length===0){ toast('JSON mangler spillere','err'); return; }
-      // Lag en sikkerhetskopi før vi erstatter
       localStorage.setItem(STORAGE_KEY+'_backup', JSON.stringify(store));
-      // Nullstill pågående runde
       recorded=new Map(); currentRound=0; started=false; restingByRound={};
-      $('#schedule').innerHTML=''; $('#meta').textContent='–'; $('#nextBtn').disabled=false;
-      // Erstatt data
+      const sched=$('#schedule'); if(sched) sched.innerHTML=''; $('#meta').textContent='–'; $('#nextBtn').disabled=false;
       store.players = players;
       store.config = config;
       save(); renderRoster(); renderTable();
@@ -322,19 +406,12 @@ function importJSONFile(file){
   };
   reader.readAsText(file, 'utf-8');
 }
-function resetAllRest(){
-  if(!confirm('Nullstille hvile for alle spillere til 0?')) return;
-  store.players.forEach(p=> p.rest = 0);
-  save(); renderRoster(); renderTable();
-  toast('Hvile nullstilt for alle.','ok');
-}
 
 /* ====== Plan (én runde av gangen) ====== */
 const sortByPoints=a=>[...a].sort((x,y)=> y.pts-x.pts || x.name.localeCompare(y.name));
 const chunk=(a,n)=>{const o=[]; for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n)); return o};
 const pairingsSeeded=g=> [ [ [g[0], g[3]], [g[1], g[2]] ] ]; // fast: 1+4 vs 2+3
 
-// Rettferdig hvile -> så seed etter ferske poeng
 function selectRestingFirst(present, cap){
   if(present.length <= cap) return { active: [...present], resting: [] };
   const byNeed = [...present].sort((a,b)=> a.rest - b.rest || Math.random() - 0.5);
@@ -352,26 +429,17 @@ function startPlan(){
   started=true; currentRound=0; recorded=new Map(); createRound();
 }
 function createRound(){
-  $('#schedule').innerHTML=''; // bare aktiv runde
+  const sched=$('#schedule'); if(sched) sched.innerHTML=''; // bare aktiv runde
   const present=store.players.filter(p=>p.present);
   if(present.length<4){ toast('For få til stede.','err'); return; }
-
-  // Re-beregn baner hver runde: input -> ellers auto
   const cIn = parseInt($('#courts').value,10);
   const autoCourts = Math.max(1, Math.floor(present.length/4));
   currentCourts = (Number.isFinite(cIn) && cIn>0) ? Math.min(cIn, autoCourts) : autoCourts;
-
   const cap=currentCourts*4;
-
-  // 1) Hvile først (rettferdig), uavhengig av poeng
   const {active, resting} = selectRestingFirst(present, cap);
   restingByRound[currentRound] = resting.map(p=>p.id);
   resting.forEach(p=>p.rest+=1);
-
-  // 2) Sortér aktive etter ferske poeng
   const seeded = sortByPoints(active);
-
-  // 3) Grupper 4 og seed 1+4 vs 2+3 (fast)
   const groups=chunk(seeded,4).filter(g=>g.length===4);
   if(!groups.length){ toast('Ikke nok spillere til en bane (trenger 4).','warn'); return; }
 
@@ -407,7 +475,6 @@ function createRound(){
   });
 
   $('#meta').textContent=`${present.length} tilstede • ${currentCourts} baner i bruk • Runde ${r+1}`;
-  // Lås "Neste runde" til alle resultater i runden er registrert
   $('#nextBtn').disabled=true;
   $$('#round-'+r+' [data-action]').forEach(btn=> btn.addEventListener('click', e=>{
     const {id,action}=e.currentTarget.dataset; applyResult(id,action);
@@ -445,36 +512,30 @@ function applyResult(id,action){
   if(allResultsEntered(currentRound)) $('#nextBtn').disabled=false;
 }
 function cancelRound(){
-  // Roll back any results in this round (remove assigned points)
   const keys = Array.from(recorded.keys()).filter(id=>id.startsWith(`r${currentRound}`));
   keys.forEach(id=>{
     const rec = recorded.get(id);
-    if(rec && rec.action){ rollbackPrevious(id); } // undoes points & clears action
+    if(rec && rec.action){ rollbackPrevious(id); }
     recorded.delete(id);
   });
-  // Undo 'rest' increments for this round
   const restIds = restingByRound[currentRound] || [];
   restIds.forEach(id=>{
     const p = store.players.find(x=>x.id===id);
     if(p && p.rest>0) p.rest -= 1;
   });
   delete restingByRound[currentRound];
-  // Clear UI of current round
-  const sched = document.getElementById('schedule');
-  if(sched) sched.innerHTML='';
-  const meta = document.getElementById('meta');
-  if(meta) meta.textContent='–';
-  // Allow generating new round immediately
-  const nextBtn = document.getElementById('nextBtn');
-  if(nextBtn) nextBtn.disabled=false;
+  const sched = document.getElementById('schedule'); if(sched) sched.innerHTML='';
+  const meta = document.getElementById('meta'); if(meta) meta.textContent='–';
+  const nextBtn = document.getElementById('nextBtn'); if(nextBtn) nextBtn.disabled=false;
   started=false;
   save(); renderRoster(); renderTable();
-  toast('Runde avbrutt. Lag en ny runde når du er klar.','warn');
+  toast('Runde avbrutt.','warn');
+  goTo('players'); // tilbake til spillere
 }
 
 /* ====== Scoreboard ====== */
 function renderTable(){
-  const wrap=$('#tableWrap');
+  const wrap=$('#tableWrap'); if(!wrap) return;
   const rows=store.players.filter(p=>p.present).sort((a,b)=> b.pts-a.pts || b.w-a.w || a.name.localeCompare(b.name));
   if(!rows.length){ wrap.innerHTML='<p class="small">Ingen til stede.</p>'; return; }
   let html='<div><table><thead><tr><th>#</th><th>Spiller</th><th>Poeng</th><th>Kamper</th><th>V</th><th>U</th><th>T</th><th>Hvile</th><th>Til stede</th></tr></thead><tbody>';
@@ -489,16 +550,26 @@ function exportCSV(){
   const a=document.createElement('a'); a.href=url; a.download='gsi-gorillas-scoreboard.csv'; a.click(); URL.revokeObjectURL(url);
 }
 
-/* ====== Init – enkel og stabil ====== */
+/* ====== Init ====== */
 window.addEventListener('DOMContentLoaded', ()=>{
   load(); renderRoster(); renderTable();
 
+  // Nav links
+  $('#nav-players').addEventListener('click', ()=> goTo('players'));
+  $('#nav-matches').addEventListener('click', ()=> goTo('matches'));
+  $('#nav-score').addEventListener('click', ()=> goTo('score'));
+
+  // Start page from hash
+  const h=location.hash.replace('#','');
+  if(h==='kamper') goTo('matches');
+  else if(h==='score') goTo('score');
+  else goTo('players');
+
+  // Add player flow
   const form  = document.getElementById('addForm');
   const input = document.getElementById('newName');
   const btn   = document.getElementById('addPlayer');
-  const nextBtn = document.getElementById('nextBtn');
 
-  // ÉN sann flyt: alt går via submit
   form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const v = (input.value || '').trim();
@@ -509,8 +580,14 @@ window.addEventListener('DOMContentLoaded', ()=>{
   });
   btn.addEventListener('click', (e)=>{ e.preventDefault(); form.requestSubmit(); });
 
+  // Roster controls
   document.getElementById('checkAll').addEventListener('click', ()=> markAll(true));
   document.getElementById('uncheckAll').addEventListener('click', ()=> markAll(false));
+  const searchEl = document.getElementById('searchName');
+  searchEl.addEventListener('input', (e)=>{
+    searchQuery = (e.target.value||'').toLowerCase();
+    renderRoster();
+  });
 
   // JSON IO
   document.getElementById('exportJson').addEventListener('click', exportJSON);
@@ -521,14 +598,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
     e.target.value=''; // tillat re-import av samme fil
   });
 
-  // Enkelt "Neste runde" - én knapp, to moduser
+  // Matches page buttons
+  const nextBtn = document.getElementById('nextBtn');
   nextBtn.addEventListener('click', ()=>{
     if(!started){ startPlan(); }
     else { nextRound(); }
   });
   document.getElementById('cancelRound').addEventListener('click', cancelRound);
 
-  document.getElementById('resetRestAll').addEventListener('click', resetAllRest);
+  // Players page navigation buttons
+
+  // Scoreboard page buttons
   document.getElementById('exportCsv').addEventListener('click', exportCSV);
 });
 </script>
