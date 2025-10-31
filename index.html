@@ -385,6 +385,7 @@ function normalizePlayer(p){
   };
 }
 function importJSONFile(file){
+
   const reader = new FileReader();
   reader.onload = () => {
     try{
@@ -406,6 +407,14 @@ function importJSONFile(file){
   };
   reader.readAsText(file, 'utf-8');
 }
+
+function resetAllRest(){
+  if(!confirm('Nullstille hvile for alle spillere til 0?')) return;
+  store.players.forEach(p=> p.rest = 0);
+  save(); renderRoster(); renderTable();
+  toast('Hvile nullstilt for alle.','ok');
+}
+
 
 /* ====== Plan (én runde av gangen) ====== */
 const sortByPoints=a=>[...a].sort((x,y)=> y.pts-x.pts || x.name.localeCompare(y.name));
@@ -581,6 +590,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
   btn.addEventListener('click', (e)=>{ e.preventDefault(); form.requestSubmit(); });
 
   // Roster controls
+  const resetBtn = document.getElementById('resetRestAll');
+  if(resetBtn){ resetBtn.addEventListener('click', resetAllRest); }
   document.getElementById('checkAll').addEventListener('click', ()=> markAll(true));
   document.getElementById('uncheckAll').addEventListener('click', ()=> markAll(false));
   const searchEl = document.getElementById('searchName');
